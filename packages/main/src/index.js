@@ -1,16 +1,18 @@
-import {app} from 'electron';
+import {app, dialog} from 'electron';
 import './security-restrictions';
-import {restoreOrCreateWindow} from '/@/mainWindow';
+import {restoreOrCreateWindow, setupTray} from '/@/mainWindow';
 import {platform} from 'node:process';
 
 /**
  * Prevent electron from running multiple instances.
  */
 const isSingleInstance = app.requestSingleInstanceLock();
-if (!isSingleInstance) {
-  app.quit();
-  process.exit(0);
+
+if(!isSingleInstance){
+	app.quit();
+	process.exit(0);
 }
+
 app.on('second-instance', restoreOrCreateWindow);
 
 /**
@@ -22,9 +24,9 @@ app.disableHardwareAcceleration();
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
-  if (platform !== 'darwin') {
-    app.quit();
-  }
+	if(platform !== 'darwin'){
+		app.quit();
+	}
 });
 
 /**
@@ -32,13 +34,24 @@ app.on('window-all-closed', () => {
  */
 app.on('activate', restoreOrCreateWindow);
 
+app.on('before-quit', (e) => {
+	/*let response = dialog.showMessageBoxSync(this, {
+		type: 'question',
+		buttons: ['Yes', 'No'],
+		title: 'Confirm',
+		message: 'Are you sure you want to quit?',
+	});
+
+	if(response === 1) e.preventDefault();*/
+});
+
 /**
  * Create the application window when the background process is ready.
  */
-app
-  .whenReady()
-  .then(restoreOrCreateWindow)
-  .catch(e => console.error('Failed create window:', e));
+app.whenReady()
+	.then(setupTray)
+	.then(restoreOrCreateWindow)
+	.catch(e => console.error('Failed create window:', e));
 
 /**
  * Install Vue.js or any other extension in development mode only.
@@ -71,16 +84,25 @@ app
  * if you compile production app without publishing it to distribution server.
  * Like `npm run compile` does. It's ok 😅
  */
-if (import.meta.env.PROD) {
-  app
-    .whenReady()
-    .then(() =>
-      /**
-       * Here we forced to use `require` since electron doesn't fully support dynamic import in asar archives
-       * @see https://github.com/electron/electron/issues/38829
-       * Potentially it may be fixed by this https://github.com/electron/electron/pull/37535
-       */
-      require('electron-updater').autoUpdater.checkForUpdatesAndNotify(),
-    )
-    .catch(e => console.error('Failed check and install updates:', e));
+if(import.meta.env.PROD){
+	app.whenReady()
+		.then(() =>
+			/**
+			 * Here we forced to use `require` since electron doesn't fully support dynamic import in asar archives
+			 * @see https://github.com/electron/electron/issues/38829
+			 * Potentially it may be fixed by this https://github.com/electron/electron/pull/37535
+			 */
+			require('electron-updater').autoUpdater.checkForUpdatesAndNotify(),
+		)
+		.catch(e => console.error('Failed check and install updates:', e));
 }
+
+
+app.setAboutPanelOptions({
+	'applicationName': 'fitxApp',
+	'applicationVersion': '1.0.0',
+	'copyright': 'https://www.nye.cat',
+	'authors': ['Albert Sunyer'],
+	'website': 'https://www.nye.cat',
+	'iconPath': '../../buildResources/icon.png',
+});

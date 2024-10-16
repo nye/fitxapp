@@ -8,21 +8,21 @@ import {injectAppVersion} from '../../version/inject-app-version-plugin.mjs';
 const PACKAGE_ROOT = __dirname;
 
 export default defineConfig({
-  server: {
-    fs: {
-      // Allow serving files from one level up to the project root
-      allow: ['../../'],
-    },
-  },
-  build: {
-    sourcemap: true,
-    target: `chrome${chrome}`
-  },
-  plugins: [
-    sveltekit(),
-    renderer.vite({
-      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts'),
-    }),
-    injectAppVersion(),
-  ]
+	server: {
+		fs: {
+			// Allow serving files from one level up to the project root
+			allow: ['../../'],
+		},
+	},
+	build: {
+		sourcemap: true,
+		target: `chrome${chrome}`
+	},
+	plugins: [
+		sveltekit(),
+		renderer.vite({
+			preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.js'),
+		}),
+		injectAppVersion(),
+	]
 });

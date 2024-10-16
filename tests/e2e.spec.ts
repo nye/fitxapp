@@ -28,7 +28,7 @@ test('Main window state', async () => {
       return new Promise(resolve => {
         /**
          * The main window is created hidden, and is shown only when it is ready.
-         * See {@link ../packages/main/src/mainWindow.ts} function
+         * See {@link ../packages/main/src/mainWindow.js} function
          */
         if (mainWindow.isVisible()) {
           resolve(getState());

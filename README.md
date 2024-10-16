@@ -91,7 +91,7 @@ export default defineConfig({
   plugins: [
     sveltekit(),
     renderer.vite({
-      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts'),
+      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.js'),
     }),
     injectAppVersion(),
   ]
@@ -131,7 +131,7 @@ export default defineConfig({
         plugins: [
     sveltekit(),
     renderer.vite({
-      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts'),
+      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.js'),
     }),
     injectAppVersion(),
   ]
@@ -548,7 +548,7 @@ this template uses the [unplugin-auto-expose](https://github.com/cawa-93/unplugi
 to export the method from the preload. The `exposeInMainWorld` will be called automatically.
 
 ```ts
-// preload/index.ts
+// preload/index.js
 import { readFile } from 'node:fs/promises';
 
 // Encapsulate types if you use typescript
@@ -557,7 +557,7 @@ interface UserData {
 }
 
 // Encapsulate all node.js api
-// Everything you exported from preload/index.ts may be called in renderer
+// Everything you exported from preload/index.js may be called in renderer
 export function getUserData(): Promise<UserData> {
   return readFile('/path/to/file/in/user/filesystem.json', {encoding:'utf8'}).then(JSON.parse);
 }
