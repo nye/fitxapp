@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "factorial",
+      "source": "@factorial/v2024-10-01#ecn8lfm1uoftva",
+      "integrity": "sha512-XOaDMxdPzJv8Pn+ccLQd71hM/chbkqx44gxdX1juf25Rps8vBoN2JOtvA0akZXOXle6vMGaVDAbQsVCnETD6vg==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}

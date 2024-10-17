@@ -1,9 +1,20 @@
 <script>
 	import logo from '$lib/images/logo.svg';
+	import {onMount} from 'svelte';
 
-	const onStartClick = () => {
-		window.electronAPI.setRedIcon();
+	const onStartClick = async () => {
+		const response = await window.api.clockIn();
+
+		console.log(response);
+
+		if(response) {
+			window.api.setRedIcon();
+		}
 	}
+
+	onMount(() => {
+
+	});
 </script>
 
 <header>
@@ -11,6 +22,7 @@
 </header>
 
 <section>
+	<p>Hola Albert Sunyer</p>
 	<button on:click={onStartClick}>Start!</button>
 </section>
 
@@ -24,5 +36,9 @@
 		img{
 			width: 100px;
 		}
+	}
+
+	section{
+		text-align: center;
 	}
 </style>

@@ -2,8 +2,9 @@ import {app, BrowserWindow, Tray, ipcMain} from 'electron';
 import {join} from 'node:path';
 import serve from 'electron-serve';
 import path from 'path';
+import {API} from './lib/api';
 
-const loadURL = serve({directory: join(app.getAppPath(), 'packages/renderer/dist')});
+const loadURL = serve({ directory: join(app.getAppPath(), 'packages/renderer/dist') });
 
 let tray;
 let window;
@@ -80,12 +81,21 @@ export async function restoreOrCreateWindow() {
 	window.focus();
 }
 
-export async function setupTray(){
+export async function init(){
+	ipc();
+	setupTray();
+}
+
+function setupTray(){
 	tray = new Tray(path.join(__dirname, '../../../buildResources/icon-white.png'));
 	tray.getIgnoreDoubleClickEvents();
 	tray.setToolTip('Fitxa la teva jornada a Factorial HR');
 
 	tray.on('click', restoreOrCreateWindow);
+}
+
+function ipc(){
+	const api = new API();
 
 	ipcMain.on('set-white-icon', () => {
 		tray.setImage(path.join(__dirname, '../../../buildResources/icon-white.png'));
@@ -93,5 +103,19 @@ export async function setupTray(){
 
 	ipcMain.on('set-red-icon', () => {
 		tray.setImage(path.join(__dirname, '../../../buildResources/icon.png'));
+	});
+
+	ipcMain.handle('clock-in', async() => {
+		try{
+			const response = await api.post('/attendance/shifts/clock_in', {
+				employee_id: api.employee_id,
+				now: new Date().toISOString(),
+			});
+
+			return response.data;
+		}catch(error){
+			console.error('Error fetching data:', error.message);
+			throw error;
+		}
 	});
 }

@@ -1,6 +1,6 @@
 import {app, dialog} from 'electron';
 import './security-restrictions';
-import {restoreOrCreateWindow, setupTray} from '/@/mainWindow';
+import {restoreOrCreateWindow, init} from '/@/mainWindow';
 import {platform} from 'node:process';
 
 /**
@@ -49,7 +49,7 @@ app.on('before-quit', (e) => {
  * Create the application window when the background process is ready.
  */
 app.whenReady()
-	.then(setupTray)
+	.then(init)
 	.then(restoreOrCreateWindow)
 	.catch(e => console.error('Failed create window:', e));
 
