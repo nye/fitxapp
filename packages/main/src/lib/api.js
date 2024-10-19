@@ -31,7 +31,6 @@ export class API {
 		const options = {
 			headers: {
 				'accept': 'application/json',
-				'content-type': 'application/json',
 				'x-api-key': this.apiKey,
 			},
 		};

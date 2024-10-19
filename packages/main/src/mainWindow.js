@@ -1,4 +1,4 @@
-import {app, BrowserWindow, Tray, ipcMain} from 'electron';
+import {app, BrowserWindow, Tray, ipcMain, shell} from 'electron';
 import {join} from 'node:path';
 import serve from 'electron-serve';
 import path from 'path';
@@ -11,8 +11,11 @@ let window;
 
 async function createWindow() {
 	const browserWindow = new BrowserWindow({
+		width: 384,
+		height: 460,
 		show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
 		titleBarStyle: 'hidden',
+		resizable: false,
 		icon: path.join(__dirname, '../../../buildResources/logo.png'),
 		webPreferences: {
 			nodeIntegration: false,
@@ -97,6 +100,10 @@ function setupTray(){
 function ipc(){
 	const api = new API();
 
+	ipcMain.handle('open-external-url', async (event, url) => {
+		await shell.openExternal(url);
+	});
+
 	ipcMain.on('set-white-icon', () => {
 		tray.setImage(path.join(__dirname, '../../../buildResources/icon-white.png'));
 	});
@@ -105,14 +112,35 @@ function ipc(){
 		tray.setImage(path.join(__dirname, '../../../buildResources/icon.png'));
 	});
 
+	ipcMain.handle('shifts', async() => {
+		try{
+			const response = await api.get('/attendance/shifts?employee_ids[]=' + api.employee_id + '&start_on=' + new Date().toISOString().split('T')[0]);
+
+			return response.data;
+		}catch(error){
+			console.error('Error fetching data:', error.message);
+			throw error;
+		}
+	});
+
 	ipcMain.handle('clock-in', async() => {
 		try{
-			const response = await api.post('/attendance/shifts/clock_in', {
+			return await api.post('/attendance/shifts/clock_in', {
 				employee_id: api.employee_id,
 				now: new Date().toISOString(),
 			});
+		}catch(error){
+			console.error('Error fetching data:', error.message);
+			throw error;
+		}
+	});
 
-			return response.data;
+	ipcMain.handle('clock-out', async() => {
+		try{
+			return await api.post('/attendance/shifts/clock_out', {
+				employee_id: api.employee_id,
+				now: new Date().toISOString(),
+			});
 		}catch(error){
 			console.error('Error fetching data:', error.message);
 			throw error;
