@@ -28,7 +28,6 @@
 			let date = new Date(s.date + ' ' + s.clock_in);
 			let now = new Date();
 
-			date.setHours(now.getHours()); // Put date on the same timezone as now
 			minuts = Math.floor((now - date) / 60000) + minuts_past;
 		}else{
 			minuts = minuts_past;
