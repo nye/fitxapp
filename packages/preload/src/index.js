@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
 	clockOut: () => ipcRenderer.invoke('clock-out'),
 
 	// UI
+	setTrayTitle: (title) => ipcRenderer.invoke('set-tray-title', title),
 	setWhiteIcon: () => ipcRenderer.send('set-white-icon'),
 	setRedIcon: () => ipcRenderer.send('set-red-icon'),
 	openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),

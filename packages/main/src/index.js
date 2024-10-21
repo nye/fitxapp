@@ -1,4 +1,4 @@
-import {app, dialog} from 'electron';
+import {app} from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow, init} from '/@/mainWindow';
 import {platform} from 'node:process';
@@ -33,17 +33,6 @@ app.on('window-all-closed', () => {
  * @see https://www.electronjs.org/docs/latest/api/app#event-activate-macos Event: 'activate'.
  */
 app.on('activate', restoreOrCreateWindow);
-
-app.on('before-quit', (e) => {
-	/*let response = dialog.showMessageBoxSync(this, {
-		type: 'question',
-		buttons: ['Yes', 'No'],
-		title: 'Confirm',
-		message: 'Are you sure you want to quit?',
-	});
-
-	if(response === 1) e.preventDefault();*/
-});
 
 /**
  * Create the application window when the background process is ready.

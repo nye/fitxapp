@@ -2,7 +2,6 @@ import {app, BrowserWindow, Tray, ipcMain, shell, nativeImage} from 'electron';
 import {join} from 'node:path';
 import serve from 'electron-serve';
 import path from 'path';
-import { DateTime } from 'luxon';
 import {API} from './lib/api';
 
 const loadURL = serve({ directory: join(app.getAppPath(), 'packages/renderer/dist') });
@@ -41,6 +40,11 @@ async function createWindow() {
 		if(import.meta.env.DEV){
 			browserWindow.webContents.openDevTools();
 		}
+	});
+
+	// HGide dock icon when the window is closed
+	browserWindow.on('closed', () => {
+		app.dock.hide();
 	});
 
 	/**
@@ -83,74 +87,41 @@ export async function restoreOrCreateWindow() {
 	}
 
 	window.focus();
+	await app.dock.show();
 }
 
 export async function init(){
-	ipc();
-	setupTray();
+	const api = new API();
 
-	// TODO: Amagar la icona del dock
-	// TODO: Al tancar l'app, demanar de parar si s'està fitxant o enviar un clock-out directament, sense demanar-ho.
-}
+	let icon_white;
+	let icon_red;
 
-function setupTray(){
-	let icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
-	let icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
+	if(import.meta.env.DEV){
+		icon_white = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-white.png'));
+		icon_red = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-red.png'));
+	}else{
+		icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
+		icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
+	}
 
 	tray = new Tray(icon_white);
 	tray.getIgnoreDoubleClickEvents();
 	tray.setToolTip('Fitxa la teva jornada a Factorial HR');
-
 	tray.on('click', restoreOrCreateWindow);
 
-	ipcMain.on('set-white-icon', () => {
-		tray.setImage(icon_white);
-	});
+	// UI
+	ipcMain.handle('open-external-url', async (event, url) => await shell.openExternal(url));
+	ipcMain.handle('set-tray-title', async (event, title) => tray.setTitle(title));
+	ipcMain.on('set-white-icon', () => tray.setImage(icon_white));
+	ipcMain.on('set-red-icon', () => tray.setImage(icon_red));
 
-	ipcMain.on('set-red-icon', () => {
-		tray.setImage(icon_red);
-	});
-}
+	// FACTORIAL API
+	ipcMain.handle('shifts', async() => await api.shifts());
+	ipcMain.handle('clock-in', async() => await api.clockIn());
+	ipcMain.handle('clock-out', async() => await api.clockOut());
 
-function ipc(){
-	const api = new API();
-
-	ipcMain.handle('open-external-url', async (event, url) => {
-		await shell.openExternal(url);
-	});
-
-	ipcMain.handle('shifts', async() => {
-		try{
-			const response = await api.get('/attendance/shifts?employee_ids[]=' + api.employee_id + '&start_on=' + new Date().toISOString().split('T')[0]);
-
-			return response.data;
-		}catch(error){
-			console.error('Error fetching data:', error.message);
-			throw error;
-		}
-	});
-
-	ipcMain.handle('clock-in', async() => {
-		try{
-			return await api.post('/attendance/shifts/clock_in', {
-				employee_id: api.employee_id,
-				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
-			});
-		}catch(error){
-			console.error('Error fetching data:', error.message);
-			throw error;
-		}
-	});
-
-	ipcMain.handle('clock-out', async() => {
-		try{
-			return await api.post('/attendance/shifts/clock_out', {
-				employee_id: api.employee_id,
-				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
-			});
-		}catch(error){
-			console.error('Error fetching data:', error.message);
-			throw error;
-		}
+	app.on('before-quit', async () => {
+		await api.clockOut(); // TODO: No està funcionant...
 	});
 }
+

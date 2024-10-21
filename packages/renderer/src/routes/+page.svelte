@@ -29,8 +29,10 @@
 			let now = new Date();
 
 			minuts = Math.floor((now - date) / 60000) + minuts_past;
+			window.api.setTrayTitle(hores);
 		}else{
 			minuts = minuts_past;
+			window.api.setTrayTitle('');
 		}
 	}
 
@@ -207,6 +209,7 @@
 		border-radius: 6px;
 		font-size: 16px;
 		color: #fff;
+		box-shadow: 2px 2px 5px -2px rgb(75 85 99 / .6);
 
 		svg{
 			width: 1rem;

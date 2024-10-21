@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { DateTime } from 'luxon';
 
 export class API {
 	constructor() {
@@ -40,6 +41,41 @@ export class API {
 			return response.data;
 		}catch(error){
 			console.error(`Error in POST request to ${endpoint}:`, error.message);
+			throw error;
+		}
+	}
+
+	async shifts(){
+		try{
+			const response = await this.get('/attendance/shifts?employee_ids[]=' + this.employee_id + '&start_on=' + DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd'));
+
+			return response.data;
+		}catch(error){
+			console.error('Error fetching data:', error.message);
+			throw error;
+		}
+	}
+
+	async clockIn(){
+		try{
+			return await this.post('/attendance/shifts/clock_in', {
+				employee_id: this.employee_id,
+				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
+			});
+		}catch(error){
+			console.error('Error fetching data:', error.message);
+			throw error;
+		}
+	}
+
+	async clockOut(){
+		try{
+			return await this.post('/attendance/shifts/clock_out', {
+				employee_id: this.employee_id,
+				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
+			});
+		}catch(error){
+			console.error('Error fetching data:', error.message);
 			throw error;
 		}
 	}
