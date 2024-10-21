@@ -1,7 +1,8 @@
-import {app, BrowserWindow, Tray, ipcMain, shell} from 'electron';
+import {app, BrowserWindow, Tray, ipcMain, shell, nativeImage} from 'electron';
 import {join} from 'node:path';
 import serve from 'electron-serve';
 import path from 'path';
+import { DateTime } from 'luxon';
 import {API} from './lib/api';
 
 const loadURL = serve({ directory: join(app.getAppPath(), 'packages/renderer/dist') });
@@ -16,7 +17,7 @@ async function createWindow() {
 		show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
 		titleBarStyle: 'hidden',
 		resizable: false,
-		icon: path.join(__dirname, '../../../buildResources/logo.png'),
+		icon: path.join(__dirname, '../../../buildResources/icon.icns'),
 		webPreferences: {
 			nodeIntegration: false,
 			contextIsolation: true,
@@ -87,14 +88,28 @@ export async function restoreOrCreateWindow() {
 export async function init(){
 	ipc();
 	setupTray();
+
+	// TODO: Amagar la icona del dock
+	// TODO: Al tancar l'app, demanar de parar si s'està fitxant o enviar un clock-out directament, sense demanar-ho.
 }
 
 function setupTray(){
-	tray = new Tray(path.join(__dirname, '../../../buildResources/icon-white.png'));
+	let icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
+	let icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
+
+	tray = new Tray(icon_white);
 	tray.getIgnoreDoubleClickEvents();
 	tray.setToolTip('Fitxa la teva jornada a Factorial HR');
 
 	tray.on('click', restoreOrCreateWindow);
+
+	ipcMain.on('set-white-icon', () => {
+		tray.setImage(icon_white);
+	});
+
+	ipcMain.on('set-red-icon', () => {
+		tray.setImage(icon_red);
+	});
 }
 
 function ipc(){
@@ -102,14 +117,6 @@ function ipc(){
 
 	ipcMain.handle('open-external-url', async (event, url) => {
 		await shell.openExternal(url);
-	});
-
-	ipcMain.on('set-white-icon', () => {
-		tray.setImage(path.join(__dirname, '../../../buildResources/icon-white.png'));
-	});
-
-	ipcMain.on('set-red-icon', () => {
-		tray.setImage(path.join(__dirname, '../../../buildResources/icon.png'));
 	});
 
 	ipcMain.handle('shifts', async() => {
@@ -127,7 +134,7 @@ function ipc(){
 		try{
 			return await api.post('/attendance/shifts/clock_in', {
 				employee_id: api.employee_id,
-				now: new Date().toISOString(),
+				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
 			});
 		}catch(error){
 			console.error('Error fetching data:', error.message);
@@ -139,7 +146,7 @@ function ipc(){
 		try{
 			return await api.post('/attendance/shifts/clock_out', {
 				employee_id: api.employee_id,
-				now: new Date().toISOString(),
+				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
 			});
 		}catch(error){
 			console.error('Error fetching data:', error.message);

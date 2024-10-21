@@ -99,10 +99,10 @@ if(import.meta.env.PROD){
 
 
 app.setAboutPanelOptions({
-	'applicationName': 'fitxApp',
+	'applicationName': 'Fitxapp',
 	'applicationVersion': '1.0.0',
 	'copyright': 'https://www.nye.cat',
 	'authors': ['Albert Sunyer'],
 	'website': 'https://www.nye.cat',
-	'iconPath': '../../buildResources/icon.png',
+	'iconPath': '../../buildResources/icon.icns',
 });
