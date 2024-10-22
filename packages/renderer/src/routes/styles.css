@@ -71,7 +71,6 @@ a{
 }
 
 .spinner .path {
-	stroke: var(--blue);
 	stroke-dasharray: 187;
 	stroke-dashoffset: 0;
 	transform-origin: center;

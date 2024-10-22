@@ -2,83 +2,63 @@
 	import logo from '$lib/images/logo.svg';
 	import {onMount} from 'svelte';
 	import Shift from '$lib/Shift.svelte';
+	import Button from '$lib/Button.svelte';
 
-	let interval1;
-	let interval2;
-
+	let interval;
+	let loading = true;
 	let shifts;
-	let minuts = 0;
-	let minuts_past = 0;
 	let hores = '00:00';
 	let fitxant = false;
 
 	$: fitxant = shifts && shifts.some(shift => !shift.clock_out);
-	$: minuts_past = shifts && shifts.reduce((acc, shift) => acc + shift.minutes, 0);
-	$: hores = minuts && Math.floor(minuts / 60) + ':' + (minuts % 60).toString().padStart(2, '0');
-
-	$: if(fitxant) {
-		window.api.setRedIcon();
-	}else{
-		window.api.setWhiteIcon();
-	}
-
-	const calcMinuts = () => {
-		if(fitxant){
-			let s = shifts[shifts.length - 1];
-			let date = new Date(s.date + ' ' + s.clock_in);
-			let now = new Date();
-
-			minuts = Math.floor((now - date) / 60000) + minuts_past;
-			window.api.setTrayTitle(hores);
-		}else{
-			minuts = minuts_past;
-			window.api.setTrayTitle('');
-		}
-	}
 
 	const fetchShifts = async () => {
+		loading = true;
+
 		const data = await window.api.shifts();
 
 		shifts = data;
+		loading = false;
 	}
 
 	const start = async () => {
+		loading = true;
+
 		const response = await window.api.clockIn();
 
 		if(response){
 			fetchShifts();
 		}
+
+		loading = false;
 	}
 
 	const stop = async () => {
+		loading = true;
 		const response = await window.api.clockOut();
 
 		if(response){
 			fetchShifts();
 		}
+
+		loading = false;
 	}
 
 	onMount(() => {
 		fetchShifts();
+		interval = setInterval(fetchShifts, 600000);
 
-		interval1 = setInterval(() => {
-			calcMinuts();
-		}, 1000);
+		window.api.onUpdateHours((value) => {
+			hores = value;
+		})
 
-		interval2 = setInterval(() => {
-			fetchShifts();
-		}, 600000);
-
-		return () => {
-			clearInterval(interval1);
-			clearInterval(interval2);
-		}
+		return () => clearInterval(interval);
 	});
 </script>
 
 <header>
 	<h1>Fitxapp</h1>
-	<img src={logo} class="clockIcon" alt="Fitxapp" />
+	<img src={logo} alt="Fitxapp" />
 </header>
 
 <section class:fitxant>
@@ -105,9 +85,9 @@
 
 	<div class="actions">
 		{#if fitxant}
-			<button on:click={() => stop()}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#fff" d="M504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256zm296-80v160c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V176c0-8.8 7.2-16 16-16h160c8.8 0 16 7.2 16 16z"/></svg> Parar</button>
+			<Button on:click={() => stop()} label="Parar" loading={loading} icon="stop" />
 		{:else}
-			<button on:click={() => start()}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play mr-2 h-4 w-4" data-id="20"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg> Fitxar</button>
+			<Button on:click={() => start()} label="Fitxar" loading={loading} icon="play" />
 		{/if}
 
 		<a href="https://app.factorialhr.com/attendance/clock-in'" target="_blank" on:click|preventDefault={() => window.api.openExternalUrl('https://app.factorialhr.com/attendance/clock-in')}>Anar a Factorial</a>
@@ -197,28 +177,6 @@
 			font-size: 0.875rem;
 			color: rgb(75 85 99 / 1);
 			cursor: pointer;
-		}
-	}
-
-	button{
-		display: flex;
-		align-items: center;
-		padding: 0.6rem 1rem;
-		background: rgb(239 68 68 / 1);
-		border: none;
-		border-radius: 6px;
-		font-size: 16px;
-		color: #fff;
-		box-shadow: 2px 2px 5px -2px rgb(75 85 99 / .6);
-
-		svg{
-			width: 1rem;
-			height: 1rem;
-			margin-right: 0.5rem;
-		}
-
-		&:hover{
-			background: rgba(229, 25, 67, 1);
 		}
 	}
 

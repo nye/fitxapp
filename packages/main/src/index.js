@@ -1,4 +1,4 @@
-import {app} from 'electron';
+import {app, powerSaveBlocker} from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow, init} from '/@/mainWindow';
 import {platform} from 'node:process';
@@ -12,6 +12,8 @@ if(!isSingleInstance){
 	app.quit();
 	process.exit(0);
 }
+
+powerSaveBlocker.start('prevent-app-suspension');
 
 app.on('second-instance', restoreOrCreateWindow);
 

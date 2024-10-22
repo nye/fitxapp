@@ -6,8 +6,27 @@ import {API} from './lib/api';
 
 const loadURL = serve({ directory: join(app.getAppPath(), 'packages/renderer/dist') });
 
+let icon_white;
+let icon_red;
+
 let tray;
 let window;
+let isWindowOpen;
+let interval;
+
+let clocking = false;
+let minutes_past = 0;
+let minutes = 0;
+let last_start_time = 0;
+
+if(import.meta.env.DEV){
+	icon_white = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-white.png'));
+	icon_red = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-red.png'));
+}else{
+	icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
+	icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
+}
+
 
 async function createWindow() {
 	const browserWindow = new BrowserWindow({
@@ -44,6 +63,7 @@ async function createWindow() {
 
 	// HGide dock icon when the window is closed
 	browserWindow.on('closed', () => {
+		isWindowOpen = false;
 		app.dock.hide();
 	});
 
@@ -88,21 +108,13 @@ export async function restoreOrCreateWindow() {
 
 	window.focus();
 	await app.dock.show();
+
+	isWindowOpen = true;
+	interval = setInterval(calculateTime, 1000);
 }
 
 export async function init(){
 	const api = new API();
-
-	let icon_white;
-	let icon_red;
-
-	if(import.meta.env.DEV){
-		icon_white = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-white.png'));
-		icon_red = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-red.png'));
-	}else{
-		icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
-		icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
-	}
 
 	tray = new Tray(icon_white);
 	tray.getIgnoreDoubleClickEvents();
@@ -116,12 +128,67 @@ export async function init(){
 	ipcMain.on('set-red-icon', () => tray.setImage(icon_red));
 
 	// FACTORIAL API
-	ipcMain.handle('shifts', async() => await api.shifts());
-	ipcMain.handle('clock-in', async() => await api.clockIn());
-	ipcMain.handle('clock-out', async() => await api.clockOut());
+	ipcMain.handle('shifts', async () => {
+		const shifts = await api.shifts();
+
+		clocking = shifts && shifts.some(shift => !shift.clock_out);
+		minutes_past = shifts && shifts.reduce((acc, shift) => acc + shift.minutes, 0);
+
+		if(clocking){
+			const last_shift = shifts.find(shift => !shift.clock_out);
+
+			tray.setImage(icon_red);
+			last_start_time = new Date(last_shift.date + ' ' + last_shift.clock_in);
+		}
+
+		return shifts;
+	});
+
+	ipcMain.handle('clock-in', async () => {
+		const response = await api.clockIn();
+
+		tray.setImage(icon_red);
+		last_start_time = new Date(response.date + ' ' + response.clock_in);
+		clocking = true;
+
+		return response;
+	});
+
+	ipcMain.handle('clock-out', async () => {
+		const response = await api.clockOut();
+
+		tray.setImage(icon_white);
+		clocking = false;
+
+		return response;
+	});
 
 	app.on('before-quit', async () => {
+		clearInterval(interval);
 		await api.clockOut(); // TODO: No està funcionant...
 	});
 }
 
+function calculateTime(){
+	let hh = 0;
+	let mm = 0;
+
+	if(clocking){
+		const now = new Date();
+		const diff = now - last_start_time;
+
+		minutes = Math.floor(diff / 60000) + minutes_past;
+
+		hh = Math.floor(minutes / 60);
+		mm = minutes % 60;
+	}else{
+		minutes = minutes_past;
+		hh = Math.floor(minutes / 60);
+		mm = minutes % 60;
+	}
+
+	const ret = `${hh}:${mm < 10 ? '0' : ''}${mm}`;
+
+	if(isWindowOpen) window.webContents.send('update-hours', ret);
+	tray.setTitle(ret);
+}
