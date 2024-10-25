@@ -20,10 +20,10 @@ let minutes = 0;
 let last_start_time = 0;
 
 if(import.meta.env.DEV){
-	icon_white = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-white.png'));
+	icon_white = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-whiteTemplate.png'));
 	icon_red = nativeImage.createFromPath(join(__dirname, '../../../buildResources/icon-red.png'));
 }else{
-	icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-white.png'));
+	icon_white = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-whiteTemplate.png'));
 	icon_red = nativeImage.createFromPath(join(app.getAppPath(), 'resources/icon-red.png'));
 }
 
@@ -144,8 +144,8 @@ export async function init(){
 		return shifts;
 	});
 
-	ipcMain.handle('clock-in', async () => {
-		const response = await api.clockIn();
+	ipcMain.handle('clock-in', async (modifier) => {
+		const response = await api.clockIn(modifier);
 
 		tray.setImage(icon_red);
 		last_start_time = new Date(response.date + ' ' + response.clock_in);
@@ -154,8 +154,8 @@ export async function init(){
 		return response;
 	});
 
-	ipcMain.handle('clock-out', async () => {
-		const response = await api.clockOut();
+	ipcMain.handle('clock-out', async (modifier) => {
+		const response = await api.clockOut(modifier);
 
 		tray.setImage(icon_white);
 		clocking = false;

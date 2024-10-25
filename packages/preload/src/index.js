@@ -7,8 +7,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('api', {
 	// FACTORIAL API
 	shifts: () => ipcRenderer.invoke('shifts'),
-	clockIn: () => ipcRenderer.invoke('clock-in'),
-	clockOut: () => ipcRenderer.invoke('clock-out'),
+	clockIn: (modifier) => ipcRenderer.invoke('clock-in', modifier),
+	clockOut: (modifier) => ipcRenderer.invoke('clock-out', modifier),
 
 	// UI
 	setWhiteIcon: () => ipcRenderer.send('set-white-icon'),

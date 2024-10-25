@@ -21,10 +21,16 @@
 		loading = false;
 	}
 
-	const start = async () => {
+	const start = async (e) => {
+		let response;
+
 		loading = true;
 
-		const response = await window.api.clockIn();
+		if(e.ctrlKey){
+			response = await window.api.clockIn(true);
+		}else{
+			response = await window.api.clockIn();
+		}
 
 		if(response){
 			fetchShifts();
@@ -33,9 +39,16 @@
 		loading = false;
 	}
 
-	const stop = async () => {
+	const stop = async (e) => {
+		let response;
+
 		loading = true;
-		const response = await window.api.clockOut();
+
+		if(e.ctrlKey) {
+			response = await window.api.clockOut(true);
+		}else{
+			response = await window.api.clockOut();
+		}
 
 		if(response){
 			fetchShifts();
@@ -85,9 +98,9 @@
 
 	<div class="actions">
 		{#if fitxant}
-			<Button on:click={() => stop()} label="Parar" loading={loading} icon="stop" />
+			<Button on:click={stop} label="Parar" loading={loading} icon="stop" />
 		{:else}
-			<Button on:click={() => start()} label="Fitxar" loading={loading} icon="play" />
+			<Button on:click={start} label="Fitxar" loading={loading} icon="play" />
 		{/if}
 
 		<a href="https://app.factorialhr.com/attendance/clock-in'" target="_blank" on:click|preventDefault={() => window.api.openExternalUrl('https://app.factorialhr.com/attendance/clock-in')}>Anar a Factorial</a>
@@ -136,7 +149,7 @@
 	}
 
 	.time{
-		padding: .8rem 1rem .5rem 1rem;
+		padding: .6rem .8rem .5rem .8rem;
 		background: rgb(254 242 242 / 1);
 		border: 1px solid rgba(229, 25, 67, .23);
 		border-radius: 4px;
@@ -145,7 +158,7 @@
 			color: rgb(75 85 99 / 1);
 			font-size: 0.82rem;
 			line-height: 1.25rem;
-			margin: 0 0 .1rem 0;
+			margin: 0;
 		}
 
 		h2{

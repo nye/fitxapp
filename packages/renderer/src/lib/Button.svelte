@@ -34,11 +34,11 @@
 		justify-content: center;
 		padding: 0.6rem 1rem;
 		background: rgb(239 68 68 / 1);
-		border: none;
 		border-radius: 6px;
 		font-size: 16px;
 		color: #fff;
-		box-shadow: 2px 2px 5px -2px rgb(75 85 99 / .6);
+		box-shadow: 2px 2px 5px -2px rgb(75 85 99 / .6), inset 1px 1px 1px rgb(255 255 255 / .2);
+		border: 1px solid rgb(207 42 42);
 
 		svg:not(.spinner){
 			width: 1rem;
@@ -57,6 +57,10 @@
 
 		&:hover:not(:disabled){
 			background: rgba(229, 25, 67, 1);
+		}
+
+		&:active{
+			box-shadow: 0 0 3px -1px rgb(75 85 99 / .6), inset 1px 1px 1px rgb(255 255 255 / .2);
 		}
 	}
 </style>

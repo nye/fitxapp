@@ -56,11 +56,19 @@ export class API {
 		}
 	}
 
-	async clockIn(){
+	async clockIn(modifier){
+		let time;
+
+		if(modifier){
+			time = DateTime.now().setZone('Europe/Madrid').minus({ minutes: 15 }).toFormat('yyyy-MM-dd HH:mm:ss');
+		}else{
+			time = DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss');
+		}
+
 		try{
 			return await this.post('/attendance/shifts/clock_in', {
 				employee_id: this.employee_id,
-				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
+				now: time,
 			});
 		}catch(error){
 			console.error('Error fetching data:', error.message);
@@ -68,11 +76,19 @@ export class API {
 		}
 	}
 
-	async clockOut(){
+	async clockOut(modifier){
+		let time;
+
+		if(modifier){
+			time = DateTime.now().setZone('Europe/Madrid').minus({ minutes: 15 }).toFormat('yyyy-MM-dd HH:mm:ss');
+		}else{
+			time = DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss');
+		}
+
 		try{
 			return await this.post('/attendance/shifts/clock_out', {
 				employee_id: this.employee_id,
-				now: DateTime.now().setZone('Europe/Madrid').toFormat('yyyy-MM-dd HH:mm:ss'),
+				now: time,
 			});
 		}catch(error){
 			console.error('Error fetching data:', error.message);
