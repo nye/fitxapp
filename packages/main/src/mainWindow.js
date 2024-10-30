@@ -13,6 +13,7 @@ let tray;
 let window;
 let isWindowOpen;
 let interval;
+let isQuitting = false;
 
 let clocking = false;
 let minutes_past = 0;
@@ -144,7 +145,7 @@ export async function init(){
 		return shifts;
 	});
 
-	ipcMain.handle('clock-in', async (modifier) => {
+	ipcMain.handle('clock-in', async (event, modifier) => {
 		const response = await api.clockIn(modifier);
 
 		tray.setImage(icon_red);
@@ -154,7 +155,7 @@ export async function init(){
 		return response;
 	});
 
-	ipcMain.handle('clock-out', async (modifier) => {
+	ipcMain.handle('clock-out', async (event, modifier) => {
 		const response = await api.clockOut(modifier);
 
 		tray.setImage(icon_white);
@@ -163,9 +164,21 @@ export async function init(){
 		return response;
 	});
 
-	app.on('before-quit', async () => {
+	app.on('will-quit', async (e) => {
+		if(isQuitting) return; // Si ja estem tancant, sortim per evitar el bucle
+		isQuitting = true;
+
+		e.preventDefault();
+
 		clearInterval(interval);
-		await api.clockOut(); // TODO: No està funcionant...
+
+		try{
+			await api.clockOut();
+		}catch(error){
+			app.quit();
+		}
+
+		app.quit(); // Primer fem preventDefault, esperem el clockOut i després sortim de l'aplicació.
 	});
 }
 

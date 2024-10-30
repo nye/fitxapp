@@ -25,12 +25,7 @@
 		let response;
 
 		loading = true;
-
-		if(e.ctrlKey){
-			response = await window.api.clockIn(true);
-		}else{
-			response = await window.api.clockIn();
-		}
+		response = await window.api.clockIn(e.shiftKey);
 
 		if(response){
 			fetchShifts();
@@ -43,12 +38,7 @@
 		let response;
 
 		loading = true;
-
-		if(e.ctrlKey) {
-			response = await window.api.clockOut(true);
-		}else{
-			response = await window.api.clockOut();
-		}
+		response = await window.api.clockOut(e.shiftKey);
 
 		if(response){
 			fetchShifts();
